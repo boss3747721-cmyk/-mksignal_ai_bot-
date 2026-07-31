@@ -10,16 +10,16 @@ from telegram.ext import ApplicationBuilder, Application, CommandHandler, Contex
 
 # ==================== কনফিগারেশন ====================
 TOKEN = "8665132024:AAFqHP1LTJ3HwLOrpm_8sDVk_QtjBYmLGAM"  # আপনার নতুন BotFather Token
-CHAT_ID = -1003927709512  # আপনার নতুন চ্যানেলের Chat ID (Integer হিসেবে)
+CHAT_ID = -1003927709512  # আপনার চ্যানেলের Chat ID
 
-# আপনার দেওয়া Win (Dance) এবং Loss (Crying) স্টিকারের File ID
+# Win (Dance) এবং Loss (Crying) স্টিকারের File ID
 STICKER_WIN_DANCE = "CAACAgUAAxkBAAERot1qbC72HGPW4eOdWUX2Q1Oyl_hXNgACqRkAAo1duFRYOEDNU42Lqj0E"
 STICKER_LOSS_CRY  = "CAACAgUAAxkBAAERot9qbC769-bIeXphPRLx04u58su-JQAC2xYAAgUNwFTuWZdkTTTthz0E"
 # ===================================================
 
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
 
-# Render-এর Deploying আটকে যাওয়া বন্ধ করার জন্য Fake Web Server
+# Render-এর জন্য Fake Web Server
 class HealthCheckHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
@@ -64,10 +64,8 @@ async def auto_signal_engine(app: Application):
                 
                 try:
                     if is_win:
-                        # Win হলে ডান্স স্টিকার
                         await app.bot.send_sticker(chat_id=CHAT_ID, sticker=STICKER_WIN_DANCE)
                     else:
-                        # Loss হলে কান্নার স্টিকার
                         await app.bot.send_sticker(chat_id=CHAT_ID, sticker=STICKER_LOSS_CRY)
                 except Exception as e:
                     print(f"Sticker Send Error: {e}")
@@ -83,7 +81,6 @@ async def auto_signal_engine(app: Application):
                 number = random.randint(0, 4)
                 prediction_icon = "SMALL 🔽"
 
-            # আপনার ফরম্যাট অনুযায়ী মেসেজ
             signal_msg = (
                 f"🎯 WINGO 30-S LIVE SIGNAL 🎯\n\n"
                 f"📡 PERIOD: #{period_id[-4:]}\n"
@@ -99,6 +96,15 @@ async def auto_signal_engine(app: Application):
 
         await asyncio.sleep(1)
 
+async def post_init(app: Application):
+    asyncio.create_task(auto_signal_engine(app))
+
+if __name__ == '__main__':
+    Thread(target=run_health_check_server, daemon=True).start()
+    
+    app = ApplicationBuilder().token(TOKEN).post_init(post_init).build()
+    print("🤖 MK Trader Ai Live Bot Started...")
+    app.run_polling()
 async def post_init(app: Application):
     asyncio.create_task(auto_signal_engine(app))
 
